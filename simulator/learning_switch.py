@@ -27,15 +27,16 @@ class LearningSwitch (api.Entity):
 
     You probablty want to do something in this method.
     """
-    pass
+    self.rout = {}
 
   def handle_port_down (self, port):
+    for src , p  in self.rout:
+      if(p == port): del self.rout[src]
     """
     Called when a port goes down (because a link is removed)
 
     You probably want to remove table entries which are no longer valid here.
     """
-    pass
 
   def handle_rx (self, packet, in_port):
     """
@@ -54,6 +55,12 @@ class LearningSwitch (api.Entity):
     if isinstance(packet, basics.HostDiscoveryPacket):
       # Don't forward discovery messages
       return
-
+      
+      
+    self.rout[packet.src] = in_port
+    if packet.dst in self.rout:
+      self.send(packet, self.rout[packet.dst])
+      return
+      # if(self.rout[packet.src] != in_port): 
     # Flood out all ports except the input port
     self.send(packet, in_port, flood=True)
